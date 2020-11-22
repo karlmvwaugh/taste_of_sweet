@@ -1,0 +1,14 @@
+{
+  "name": "platform-dash",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {
+    "ng": "ng",
+    "start": "node fileserver"
+  },
+  "private": true,
+  "dependencies": {
+    "file-server": "^2.1.0",
+    "node-static": "^0.7.11"
+  }
+}
