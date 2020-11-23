@@ -82,7 +82,9 @@ var beatSynth = function(id, freq, speed, noteSpeed, masterGain) {
     __().lfo({id: "lfofreq" + id, frequency:noteSpeed,modulates:"frequency",gain:150,type:"sine"}).connect("#id" + id);
     __().lfo({id: "lfogain" + id, frequency:speed,modulates:"gain",gain:2,type:"square"}).connect("#gain" + id);
     __().lfo({id: "lfodelay" + id, frequency:speed/4,modulates:"feedback",gain:1,type:"saw"}).connect("#delay" + id);
-    __().lfo({id: "lfofreqfreq" + id, frequency:speed/8,modulates:"frequency",gain:0.1,type:"sine"}).connect("#lfofreq" + id);
+    __().lfo({id: "lfofreqfreq" + id, frequency:speed/8,modulates:"frequency",gain:0.01,type:"sine"}).connect("#lfofreq" + id);
+    __().lfo({id: "lfofreqoflfogain" + id, frequency:speed/296 ,modulates:"gain",gain:1,type:"sine"}).connect("#lfofreq" + id);
+
 };
 
 var warbleSynth = function(id, factor, withReverb, masterGain) {
@@ -98,13 +100,14 @@ var warbleSynth = function(id, factor, withReverb, masterGain) {
         .dac();
 
     __().lfo({id: "lfofreq" + id, frequency:factor/10 ,modulates:"frequency",gain:200,type:"sine"}).connect("#sine" + id);
-
-
     __().lfo({id: "lfodelay" + id, frequency:factor ,modulates:"delay",gain:7,type:"sine"}).connect("#delay" + id);
+
+    // __().lfo({id: "lfofreqoflfogain" + id, frequency:factor/222 ,modulates:"gain",gain:2,type:"sine"}).connect("#lfofreq" + id);
+
 };
 
 var kick = function(id, freq, masterGain) {
-    __().square({id: "id" + id, frequency: freq}).gain({id: "gain" + id, gain: 1})
+    __().square({id: "id" + id, frequency: freq}).gain({id: "gain" + id, gain: 10})
         .delay({delay: 1, feedback: 0.3, cutoff: 1500, id: "delay" + id})
         .gain({id: "masterGain" + id, gain: masterGain})
         .dac();
@@ -121,8 +124,8 @@ const control = {
 
 //FIRST WEIRD BEAT
         beatSynth(1, 200, 4, 0.13, 0.5);
-        warbleSynth(2, 0.01, true, 0.6);
-        warbleSynth(3, 0.02, false, 0.01);
+        warbleSynth(2, 0.01, true, 0.3);
+        warbleSynth(3, 0.02, false, 0.001);
         beatSynth(4, 400, 2, 0.013, 0.001);
         kick(5, 2, 0.9);
 
