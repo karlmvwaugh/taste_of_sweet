@@ -122,8 +122,8 @@ const control = {
 //FIRST WEIRD BEAT
         beatSynth(1, 200, 4, 0.13, 0.5);
         warbleSynth(2, 0.01, true, 0.6);
-        warbleSynth(3, 0.02, false, 0.05);
-        beatSynth(4, 400, 16, 0.013, 0.1);
+        warbleSynth(3, 0.02, false, 0.01);
+        beatSynth(4, 400, 2, 0.013, 0.001);
         kick(5, 2, 0.9);
 
 
