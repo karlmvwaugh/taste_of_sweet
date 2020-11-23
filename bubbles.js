@@ -85,7 +85,7 @@ var beatSynth = function(id, freq, speed, noteSpeed, masterGain) {
     __().lfo({id: "lfofreqfreq" + id, frequency:speed/8,modulates:"frequency",gain:0.1,type:"sine"}).connect("#lfofreq" + id);
 };
 
-var warbleSynth = function(id, withReverb, masterGain) {
+var warbleSynth = function(id, factor, withReverb, masterGain) {
     __().sine({id: "sine" + id, frequency: 50}).gain(1)
         .gain({id: "gain"  + id, gain: 1})
         .delay({delay: 3, feedback: 0.7, cutoff: 1000, id: "delay" + id});
@@ -97,10 +97,10 @@ var warbleSynth = function(id, withReverb, masterGain) {
     __.gain({id: "masterGain" + id, gain: masterGain})
         .dac();
 
-    __().lfo({id: "lfofreq" + id, frequency:0.01 ,modulates:"frequency",gain:200,type:"sine"}).connect("#sine" + id);
+    __().lfo({id: "lfofreq" + id, frequency:factor/10 ,modulates:"frequency",gain:200,type:"sine"}).connect("#sine" + id);
 
 
-    __().lfo({id: "lfodelay" + id, frequency:0.1 ,modulates:"delay",gain:7,type:"sine"}).connect("#delay" + id);
+    __().lfo({id: "lfodelay" + id, frequency:factor ,modulates:"delay",gain:7,type:"sine"}).connect("#delay" + id);
 };
 
 var kick = function(id, freq, masterGain) {
@@ -121,48 +121,21 @@ const control = {
 
 //FIRST WEIRD BEAT
         beatSynth(1, 200, 4, 0.13, 0.5);
-        warbleSynth(2, true, 0.8);
-        warbleSynth(3, false, 0.1);
+        warbleSynth(2, 0.01, true, 0.6);
+        warbleSynth(3, 0.02, false, 0.05);
         beatSynth(4, 400, 16, 0.013, 0.1);
-        kick(5, 0.5, 0.9);
-
-
-        /*
-        * VISUALS BASED ON artNew2 (from trippy visuals)
-        * Add gaps (aka like if I go away from the page)
-        * Interactivity
-        * An end? Plus ramp up at the begininning 
-        * */
-/*
-        var toSine = (id, freq, beat) => {
-            __().sine({id: "id" + id, frequency: freq}).gain({id: "gain" + id, gain: 1})
-                .delay({delay: 1, feedback: 0.3, cutoff: 1500, id: "delay" + id})
-                .gain({id: "masterGain" + id, gain: 10})
-                .dac();
-
-            __().lfo({frequency:beat,modulates:"gain",gain:2,type:"square"}).connect("#gain" + id);
-
-        };
-
-
-        toSine(0, 100, 5);
-        toSine(2, 300, 2.5);
-*/
+        kick(5, 2, 0.9);
 
 
         __("sine").play();
+
+        /*
+* VISUALS BASED ON artNew2 (from trippy visuals)
+* Add gaps (aka like if I go away from the page)
+* Interactivity
+* An end? Plus ramp up at the begininning
+* */
     }
 };
 
 container = visuals.initD3();
-
-
-//*
-// TODO: make mouse moves reposition the circles within the frame. (cheap 3d) - top frame to middle, zoom in and zoom out slightly -
-// Does this movement effect the music as well? mixing the volumes of the sinewaves?
-// Add click me / intro screen
-// correct height of original drawing problem (?)
-// correct - sometimes starts with just one tone?
-// END SCREEN and CREDITS + stats (how long etc. uniqueness etc.)
-//
-// *//
