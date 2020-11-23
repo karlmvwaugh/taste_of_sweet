@@ -8,7 +8,7 @@ var deathTimeRange = [2, 16];
 var gain = 0.03;
 var stepTime = rampTime * 1010;
 var killLiklihood = 0.005;
-var killLiklihoodLimit = 0.06;
+var killLiklihoodLimit = 0.1;
 var killLiklihoodStep = (killLiklihoodLimit - killLiklihood) / toGenerate;
 var container = null;
 
