@@ -103,7 +103,7 @@ const control = {
 
 
 //FIRST WEIRD BEAT
-        var time = 30*60;
+        var time = 30*60 - 5;
 
         slowSynth(1, 50);
         slowSynth(2, 50);
