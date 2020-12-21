@@ -1,10 +1,6 @@
 
 var initted = false;
 
-var beginningFrequency = 100;
-var rampTime = 4;
-var gain = 0.03;
-
 var container = null;
 
 
