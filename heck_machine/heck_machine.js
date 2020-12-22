@@ -252,7 +252,7 @@ const init = function(event) {
     // display controls as two sides /
     // Names on the controls
     // Different colourings on different control sections (perhaps?)
-    // relative volume controls. 
+    // relative volume controls.
     //
     //
     // *//

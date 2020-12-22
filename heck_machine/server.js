@@ -32,7 +32,11 @@ var state = {
 
 io.on('connection', (socket) => {
     state.users.count = state.users.count + 1;
-    console.log('a user connected');
+    console.log('a user connected' + state.users.count);
+    var msg = { valueName: 'users', property: 'count', value: state.users.count};
+    socket.broadcast.emit('dial move', msg);
+    socket.emit('whole state', state);
+
 
     socket.on('dial move', (msg) => {
         console.log("Msg" + msg);
@@ -50,9 +54,7 @@ io.on('connection', (socket) => {
         socket.broadcast.emit('dial move', msg);
     });
 
-    var msg = { valueName: 'users', property: 'count', value: state.users.count};
-    socket.broadcast.emit('dial move', msg);
-    socket.emit('whole state', state);
+
 
 });
 
