@@ -11,17 +11,11 @@ var state = {
     pitch2: 5,
     delay: 0.5,
     squareWave: 150,
-    squareOsc: 10
+    squareOsc: 10,
+    tremelo2: 0.5
 };
 
-var stateAudio = {
-    tremelo: "frequency",
-    pitch: "frequency",
-    pitch2: "gain",
-    delay: "delay",
-    squareWave: "frequency",
-    squareOsc: "gain"
-};
+
 
 var stateVisuals = {};
 
@@ -33,10 +27,10 @@ var clicker = function(event) {
     clickList.map(clickMethod => clickMethod(x, y));
 };
 
-const dispatcher = function(valueName, value) {
+const dispatcher = function(valueName, property, value) {
     console.log(valueName + "set to" + value);
     const attrObject = {};
-    attrObject[stateAudio[valueName]] = value;
+    attrObject[property] = value;
     __("#" + valueName).attr(attrObject);
 
     stateVisuals[valueName](value);
@@ -131,35 +125,61 @@ const initSounds = function() {
         .dac();
 
      __().lfo({id: "squareOsc", frequency:0.1 ,modulates:"frequency",gain:10,type:"sine"}).connect("#squareWave");
+    __().lfo({id: "tremelo2", frequency:0.5 ,modulates:"gain",gain:0.3, type:"sine"}).connect("#gain");
 
 
 };
 
-const buildSlideControl = function(methodName, minimumValue, maximumValue, width, startWidth, height, startHeight) {
+const buildSlideControl = function(valueName, property, minimumValue, maximumValue, width, startWidth, height, startHeight) {
     var getCoord = function(value) {
         const share = (value - minimumValue) / (maximumValue - minimumValue);
 
         return share*width + startWidth;
     };
 
-    container.append("ellipse")
+    var currentValue = state[valueName];
+
+    var ellipseIsGreen = true;
+
+    var getDuration = function() {
+        var share = (currentValue - minimumValue) / (maximumValue - minimumValue);
+        return (1 - share) * 4900 + 100;
+    };
+
+    var ellipse = container.append("ellipse")
         .attr("cx", startWidth + width/2)
         .attr("cy", startHeight + height/2)
         .attr("rx", width/2)
         .attr("ry", height/2)
-        .attr("fill", "green")
-        .style("opacity", 0.5);
+        .attr("fill", "black")
+        .style("opacity", 1); //0.5 if we want them to overlap
 
     var circle = container
         .append("circle")
-        .attr("id", methodName)
+        .attr("id", valueName)
         .attr("r", 10)
-        .attr("fill", "red")
+        .attr("fill", "black")
         .attr("stroke", "none")
         .attr("stroke-width", "0px")
-        .attr("cx", getCoord(state[methodName]))
+        .attr("cx", getCoord(currentValue))
         .attr("cy", startHeight + (height/2))
         .style("opacity", 1);
+
+    var colourLoop = function() {
+        var duration = getDuration();
+        ellipse.transition().duration(duration)
+            .attr("fill", ellipseIsGreen ? "purple" : "green");
+
+        circle.transition().duration(duration)
+            .attr("fill", ellipseIsGreen ? "orange" : "red");
+
+
+        ellipseIsGreen = !ellipseIsGreen;
+
+        window.setTimeout(colourLoop, duration);
+    };
+
+    colourLoop();
 
     const coordsInRange = function (x, y) {
         return (x > startWidth && x < startWidth + width && y > startHeight && y < startHeight + height);
@@ -167,15 +187,10 @@ const buildSlideControl = function(methodName, minimumValue, maximumValue, width
 
     const clickFunction = function(x, y) {
       if (coordsInRange(x, y)) {
-          console.log(x + ":" + y);
-          console.log(width + ":" + startWidth);
-          console.log(height + "-" + startHeight);
-
           var xShare = (x - startWidth) / (width);
 
-
           var newValue = xShare * (maximumValue - minimumValue) + minimumValue;
-          dispatcher(methodName, newValue);
+          dispatcher(valueName, property, newValue);
       }
     };
 
@@ -183,11 +198,11 @@ const buildSlideControl = function(methodName, minimumValue, maximumValue, width
 
     const updateFunction = function (updateValue) {
         console.log(updateValue + ":" + getCoord(updateValue));
-
+        currentValue = updateValue;
         circle.transition().duration(100).attr("cx", getCoord(updateValue));
     };
 
-    stateVisuals[methodName] = updateFunction;
+    stateVisuals[valueName] = updateFunction;
 };
 
 
@@ -201,14 +216,27 @@ const init = function(event) {
     initted = true;
 
     initSounds();
-    buildSlideControl("tremelo", 1, 10, effectiveWidth, paddingWidth, 50, 50);
-    buildSlideControl("pitch", 0.05, 2, effectiveWidth, paddingWidth, 50, 100);
-    buildSlideControl("pitch2", 5, 100, effectiveWidth, paddingWidth, 50, 150);
-    buildSlideControl("delay", 0.05, 2, effectiveWidth, paddingWidth, 50, 200);
+    buildSlideControl("tremelo", "frequency",1, 10, effectiveWidth, paddingWidth, 30, 30);
+    buildSlideControl("pitch", "frequency", 0.05, 2, effectiveWidth, paddingWidth, 30, 60);
+    buildSlideControl("pitch2", "gain",5, 100, effectiveWidth, paddingWidth, 30, 90);
+    buildSlideControl("delay", "delay",0.05, 2, effectiveWidth, paddingWidth, 30, 120);
 
-    buildSlideControl("squareWave", 20, 200, effectiveWidth, paddingWidth, 50, 300);
-    buildSlideControl("squareOsc", 1, 100, effectiveWidth, paddingWidth, 50, 350);
+    buildSlideControl("squareWave", "frequency",20, 200, effectiveWidth, paddingWidth, 30, 180);
+    buildSlideControl("squareOsc", "gain",1, 100, effectiveWidth, paddingWidth, 30, 210);
+    buildSlideControl("tremelo2", "frequency",0.1, 2, effectiveWidth, paddingWidth, 30, 240);
 
+
+    //*
+    // CHANGES:
+    // Flashing controls, based on value of marker
+    // socket.io to make it shareable
+    // kaos pad section (on press only)
+    // mini-chat window,
+    // online counter
+    //
+    //
+    //
+    // *//
 
     __("#sine").play();
     __("#squareWave").play();
