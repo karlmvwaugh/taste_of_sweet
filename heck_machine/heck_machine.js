@@ -228,12 +228,11 @@ const init = function(event) {
 
     //*
     // CHANGES:
-    // Flashing controls, based on value of marker
     // socket.io to make it shareable
-    // kaos pad section (on press only)
+    // kaos pad section 
     // mini-chat window,
     // online counter
-    //
+    // more controls on current things (osc speed, depth, second delay time etc.)
     //
     //
     // *//
