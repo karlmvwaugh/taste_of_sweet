@@ -9,6 +9,7 @@
   "private": true,
   "dependencies": {
     "file-server": "^2.1.0",
-    "node-static": "^0.7.11"
+    "node-static": "^0.7.11",
+    "socket.io": "^3.0.4"
   }
 }

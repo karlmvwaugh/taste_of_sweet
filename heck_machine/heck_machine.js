@@ -27,7 +27,7 @@ var clicker = function(event) {
     clickList.map(clickMethod => clickMethod(x, y));
 };
 
-const dispatcher = function(valueName, property, value) {
+const reciever = function(valueName, property, value) {
     console.log(valueName + "set to" + value);
     const attrObject = {};
     attrObject[property] = value;
@@ -36,6 +36,13 @@ const dispatcher = function(valueName, property, value) {
     stateVisuals[valueName](value);
 
     state[valueName] = value;
+};
+
+
+const dispatcher = function(valueName, property, value) {
+    //send to socket.io
+
+    reciever(valueName, property, value);
 };
 
 var utils = {
@@ -83,7 +90,7 @@ const initD3 = function() {
         effectiveWidth = width * 0.9;
         paddingWidth = width*0.05;
         var height = document.body.clientHeight;
-
+        console.log("!" + document.body.clientHeight);
         if (height < 1000) {
             height = 1000;
         }
@@ -229,11 +236,11 @@ const init = function(event) {
     //*
     // CHANGES:
     // socket.io to make it shareable
-    // kaos pad section 
+    // kaos pad section
     // mini-chat window,
     // online counter
     // more controls on current things (osc speed, depth, second delay time etc.)
-    //
+    // weclome page
     //
     // *//
 
