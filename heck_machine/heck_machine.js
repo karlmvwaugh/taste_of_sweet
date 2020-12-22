@@ -12,8 +12,8 @@ var state = {
     pitch2: {gain: 5},
     delay: {delay: 0.5},
     squareWave: {frequency: 150},
-    squareOsc: {gain: 10},
-    tremelo2: {frequency: 0.5},
+    squareOsc: {gain: 10, frequency: 0.1},
+    tremelo2: {frequency: 0.5, gain: 0.3},
     users: {count: 0}
 };
 
@@ -41,8 +41,6 @@ var initSocket = function() {
                         reciever(key, subkey, state[key][subkey]);
                     }
                 }
-
-                //apply each
             }
         }
     });
@@ -60,55 +58,14 @@ const reciever = function(valueName, property, value) {
     attrObject[property] = value;
     __("#" + valueName).attr(attrObject);
 
-    stateVisuals[valueName](value);
+    stateVisuals[valueName][property](value);
 
     state[valueName][property] = value;
 };
 
-
 const dispatcher = function(valueName, property, value) {
     reciever(valueName, property, value);
     socket.emit('dial move', {valueName: valueName, property: property, value: value});
-};
-
-var utils = {
-    getRandom: function(min, max) {
-        return Math.random() * (max - min + 1) + min;
-    },
-    lerper: function(value1, value2, range) {
-        var i = utils.getRandomInt(range);
-        var plus = true;
-
-        var nextIValue = function() {
-            if (plus) {
-                i = i + 1;
-            } else {
-                i = i -1;
-            }
-
-            if (i < 0) {
-                i = 0;
-                plus = true;
-            }
-            if (i > range) {
-                i = range;
-                plus = false;
-            }
-        };
-
-        var funky = function(){
-            var value = (i / range)*(value2 - value1) + value1;
-            nextIValue();
-            return value;
-        };
-
-        funky.set = function(j) {
-            i = j;
-            return funky;
-        };
-
-        return funky;
-    }
 };
 
 const initD3 = function() {
@@ -129,9 +86,7 @@ const initD3 = function() {
         var screen = d3.select("#screen");
         screen.style("background", "#010203");
 
-        var container = svg.append("g")
-            //.attr("transform", "translate(" + centre.x + ","  + 0 + ")");
-            //.attr("transform", "translate(" + centre.x + ","  + centre.y + ")");
+        var container = svg.append("g");
 
         return container;
     };
@@ -233,8 +188,7 @@ const buildSlideControl = function(valueName, property, minimumValue, maximumVal
         currentValue = updateValue;
         circle.transition().duration(100).attr("cx", getCoord(updateValue));
     };
-
-    stateVisuals[valueName] = updateFunction;
+    setStateVisuals(valueName, property, updateFunction);
 };
 
 var countDisplay = function() {
@@ -249,10 +203,16 @@ var countDisplay = function() {
         text.transition().duration(100).text(state.users.count);
     };
 
-    stateVisuals["users"] = updateFunction;
-}
+    setStateVisuals("users", "count", updateFunction);
+};
 
+var setStateVisuals = function(valueName, property, callback) {
+    if (!stateVisuals[valueName]) {
+        stateVisuals[valueName] = {}
+    }
 
+    stateVisuals[valueName][property] = callback;
+};
 
 container = initD3();
 
@@ -272,7 +232,9 @@ const init = function(event) {
 
     buildSlideControl("squareWave", "frequency",20, 200, effectiveWidth, paddingWidth, 30, 180);
     buildSlideControl("squareOsc", "gain",1, 100, effectiveWidth, paddingWidth, 30, 210);
-    buildSlideControl("tremelo2", "frequency",0.1, 2, effectiveWidth, paddingWidth, 30, 240);
+    buildSlideControl("squareOsc", "frequency",0, 1, effectiveWidth, paddingWidth, 30, 240);
+    buildSlideControl("tremelo2", "frequency",0.1, 2, effectiveWidth, paddingWidth, 30, 270);
+    buildSlideControl("tremelo2", "gain",0, 0.7, effectiveWidth, paddingWidth, 30, 300);
     countDisplay();
     __("#sine").play();
     __("#squareWave").play();
@@ -282,12 +244,16 @@ const init = function(event) {
 
     //*
     // CHANGES:
-    // socket.io to make it shareable
     // kaos pad section
     // mini-chat window,
-    // online counter
+    // online counter (working ish)
     // more controls on current things (osc speed, depth, second delay time etc.)
     // weclome page
+    // display controls as two sides /
+    // Names on the controls
+    // Different colourings on different control sections (perhaps?)
+    // relative volume controls. 
+    //
     //
     // *//
 

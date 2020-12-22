@@ -25,8 +25,8 @@ var state = {
     pitch2: {gain: 5},
     delay: {delay: 0.5},
     squareWave: {frequency: 150},
-    squareOsc: {gain: 10},
-    tremelo2: {frequency: 0.5},
+    squareOsc: {gain: 10, frequency: 0.1},
+    tremelo2: {frequency: 0.5, gain: 0.3},
     users: {count: 0}
 };
 
