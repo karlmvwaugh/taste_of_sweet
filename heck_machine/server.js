@@ -23,7 +23,7 @@ var state = {
     tremelo: { frequency: 4},
     pitch: {frequency: 0.15},
     pitch2: {gain: 5},
-    delay: {delay: 0.5},
+    delay: {delay: 0.5, feedback: 0.3},
     squareWave: {frequency: 150},
     squareOsc: {gain: 10, frequency: 0.1},
     tremelo2: {frequency: 0.5, gain: 0.3},
@@ -39,7 +39,7 @@ io.on('connection', (socket) => {
 
 
     socket.on('dial move', (msg) => {
-        console.log("Msg" + msg);
+        console.log("Msg: " + msg.valueName + ":" + msg.property + "=" + msg.value);
 
         state[msg.valueName][msg.property] = msg.value;
 
@@ -48,7 +48,7 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
         state.users.count = state.users.count - 1;
-        console.log('a user disconnected');
+        console.log('a user disconnected ' + state.users.count);
 
         var msg = { valueName: 'users', property: 'count', value: state.users.count};
         socket.broadcast.emit('dial move', msg);

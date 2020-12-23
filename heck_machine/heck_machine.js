@@ -10,23 +10,20 @@ var state = {
     tremelo: { frequency: 4},
     pitch: {frequency: 0.15},
     pitch2: {gain: 5},
-    delay: {delay: 0.5},
+    delay: {delay: 0.5, feedback: 0.3},
     squareWave: {frequency: 150},
     squareOsc: {gain: 10, frequency: 0.1},
     tremelo2: {frequency: 0.5, gain: 0.3},
     users: {count: 0}
 };
 
-var stateVisuals = {};
-
-var clickList = [];
 
 var initSocket = function() {
 
     socket = io();
 
     socket.on('dial move', (msg) => {
-        reciever(msg.valueName, msg.property, msg.value);
+        controls.reciever(msg.valueName, msg.property, msg.value);
     });
 
     socket.on('whole state', (receivedState) => {
@@ -38,7 +35,7 @@ var initSocket = function() {
 
                 for (var subkey in state[key]) {
                     if (state[key].hasOwnProperty(subkey)) {
-                        reciever(key, subkey, state[key][subkey]);
+                        controls.reciever(key, subkey, state[key][subkey]);
                     }
                 }
             }
@@ -46,27 +43,33 @@ var initSocket = function() {
     });
 };
 
-var clicker = function(event) {
-    var x = event.clientX;
-    var y = event.clientY;
-    clickList.map(clickMethod => clickMethod(x, y));
+var controls = {
+    callbacks: {},
+    clickList: [],
+    clicker: function(event) {
+        var x = event.clientX;
+        var y = event.clientY;
+        controls.clickList.map(clickMethod => clickMethod(x, y));
+    },
+    reciever: function(valueName, property, value) {
+        console.log(valueName + "set to" + value);
+
+        controls.callbacks[valueName][property](value);
+        state[valueName][property] = value;
+    },
+    dispatcher: function(valueName, property, value) {
+        controls.reciever(valueName, property, value);
+        socket.emit('dial move', {valueName: valueName, property: property, value: value});
+    },
+    setCallbacks: function(valueName, property, callback) {
+        if (!controls.callbacks[valueName]) {
+            controls.callbacks[valueName] = {}
+        }
+
+        controls.callbacks[valueName][property] = callback;
+    }
 };
 
-const reciever = function(valueName, property, value) {
-    console.log(valueName + "set to" + value);
-    const attrObject = {};
-    attrObject[property] = value;
-    __("#" + valueName).attr(attrObject);
-
-    stateVisuals[valueName][property](value);
-
-    state[valueName][property] = value;
-};
-
-const dispatcher = function(valueName, property, value) {
-    reciever(valueName, property, value);
-    socket.emit('dial move', {valueName: valueName, property: property, value: value});
-};
 
 const initD3 = function() {
         var width = document.body.clientWidth;
@@ -102,8 +105,8 @@ const initSounds = function() {
 
     __().lfo({id: "tremelo", frequency:4 ,modulates:"gain",gain:1,type:"square"}).connect("#gain");
     __().lfo({id: "pitch", frequency:0.15 ,modulates:"frequency",gain:100,type:"sine"}).connect("#sine");
-
     __().lfo({id: "pitch2", frequency:0.1 ,modulates:"gain",gain:5,type:"sine"}).connect("#pitch");
+
 
     __().square({id: "squareWave", frequency:150,gain:1})
         .gain({id: "gain2", gain: 1})
@@ -177,18 +180,23 @@ const buildSlideControl = function(valueName, property, minimumValue, maximumVal
           var xShare = (x - startWidth) / (width);
 
           var newValue = xShare * (maximumValue - minimumValue) + minimumValue;
-          dispatcher(valueName, property, newValue);
+          controls.dispatcher(valueName, property, newValue);
       }
     };
 
-    clickList.push(clickFunction);
+    controls.clickList.push(clickFunction);
 
     const updateFunction = function (updateValue) {
         console.log(updateValue + ":" + getCoord(updateValue));
         currentValue = updateValue;
+
+        const attrObject = {};
+        attrObject[property] = updateValue;
+        __("#" + valueName).attr(attrObject);
+
         circle.transition().duration(100).attr("cx", getCoord(updateValue));
     };
-    setStateVisuals(valueName, property, updateFunction);
+    controls.setCallbacks(valueName, property, updateFunction);
 };
 
 var countDisplay = function() {
@@ -203,38 +211,35 @@ var countDisplay = function() {
         text.transition().duration(100).text(state.users.count);
     };
 
-    setStateVisuals("users", "count", updateFunction);
-};
-
-var setStateVisuals = function(valueName, property, callback) {
-    if (!stateVisuals[valueName]) {
-        stateVisuals[valueName] = {}
-    }
-
-    stateVisuals[valueName][property] = callback;
+    controls.setCallbacks("users", "count", updateFunction);
 };
 
 container = initD3();
 
 const init = function(event) {
     if (initted) {
-        clicker(event);
+        controls.clicker(event);
         return;
     }
     initted = true;
 
     initSounds();
 
-    buildSlideControl("tremelo", "frequency",1, 10, effectiveWidth, paddingWidth, 30, 30);
-    buildSlideControl("pitch", "frequency", 0.05, 2, effectiveWidth, paddingWidth, 30, 60);
-    buildSlideControl("pitch2", "gain",5, 100, effectiveWidth, paddingWidth, 30, 90);
-    buildSlideControl("delay", "delay",0.05, 2, effectiveWidth, paddingWidth, 30, 120);
+    var leftPad = 2*paddingWidth / 3;
+    var itemWidth = effectiveWidth / 2;
+    var secondPad = itemWidth + 2*leftPad;
 
-    buildSlideControl("squareWave", "frequency",20, 200, effectiveWidth, paddingWidth, 30, 180);
-    buildSlideControl("squareOsc", "gain",1, 100, effectiveWidth, paddingWidth, 30, 210);
-    buildSlideControl("squareOsc", "frequency",0, 1, effectiveWidth, paddingWidth, 30, 240);
-    buildSlideControl("tremelo2", "frequency",0.1, 2, effectiveWidth, paddingWidth, 30, 270);
-    buildSlideControl("tremelo2", "gain",0, 0.7, effectiveWidth, paddingWidth, 30, 300);
+    buildSlideControl("tremelo", "frequency",1, 10, itemWidth, leftPad, 30, 30);
+    buildSlideControl("pitch", "frequency", 0.05, 2, itemWidth, leftPad, 30, 60);
+    buildSlideControl("pitch2", "gain",5, 100, itemWidth, leftPad, 30, 90);
+    buildSlideControl("delay", "delay",0.05, 2, itemWidth, leftPad, 30, 120);
+    buildSlideControl("delay", "feedback",0, 0.8, itemWidth, leftPad, 30, 150);
+
+    buildSlideControl("squareWave", "frequency",20, 200, itemWidth, secondPad, 30, 30);
+    buildSlideControl("squareOsc", "gain",1, 100, itemWidth, secondPad, 30, 60);
+    buildSlideControl("squareOsc", "frequency",0, 1, itemWidth, secondPad, 30, 90);
+    buildSlideControl("tremelo2", "frequency",0.1, 2, itemWidth, secondPad, 30, 120);
+    buildSlideControl("tremelo2", "gain",0, 0.7, itemWidth, secondPad, 30, 150);
     countDisplay();
     __("#sine").play();
     __("#squareWave").play();
@@ -249,11 +254,10 @@ const init = function(event) {
     // online counter (working ish)
     // more controls on current things (osc speed, depth, second delay time etc.)
     // weclome page
-    // display controls as two sides /
     // Names on the controls
-    // Different colourings on different control sections (perhaps?)
-    // relative volume controls.
-    //
+    // Different colourings on different control sections (perhaps?) (colourschemes)
+    // relative volume controls. /. crossfade for 2 sections
+    // interrupted transitions occasionally (colour transition interrupting position transition? do it with groupings?)
     //
     // *//
 
